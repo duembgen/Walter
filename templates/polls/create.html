@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% block content %}
+<a class="btn btn-secondary btn-sm mb-3" href="{% url 'polls:index' %}">Back To Polls</a>
+<h1 class="text-center mb-3">{{ question.question_text }}</h1>
+
+{% if error_message %}
+<p class="alert alert-danger">
+	<strong>{{ error_message }}</strong>
+</p>
+{% endif %}
+
+<form action="{% url 'polls:submit' question.id %}" method="post">
+	{% csrf_token %} 
+	<label for="answer">
+    Enter answer here:  
+  </label>
+ 	<div class="form-group">
+			<input
+				type="text"
+				name="answer"
+				class="form-control"
+				id="answer"
+        value="{{ current_answer }}"
+			/>
+	</div>
+	<input type="submit" value="Submit" class="btn btn-success btn-lg btn-block mt-4" />
+</form>
+{% endblock %}
