@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% block content %}
+
+{% if error_message %}
+<p class="alert alert-danger">
+	<strong>{{ error_message }}</strong>
+</p>
+{% endif %}
+
+
+  <div class="container">
+    <div class="jumbotron">
+      <h3> Schon registiriert? </h3>
+      <form method="post" action="{% url 'pages:user_login' %}">
+          {% csrf_token %}
+          {# A more "HTML" way of creating the login form#}
+          <label for="username">Benutzername:</label>
+          <input type="text" name="username" placeholder="Benutzername">
+          <br>
+          <label for="password">Passwort:</label>
+          <input type="password" name="password" placeholder="Passwort"><br>
+          <input type="submit" name="" value="Einloggen" class="btn btn-secondary btn-sm">
+      </form>
+      <br>
+      <h3> Neu hier? </h3>
+      <a href="{% url 'pages:register' %}" class="btn btn-secondary btn-sm">Registrieren</a>
+    </div>
+  </div>
+{% endblock %}

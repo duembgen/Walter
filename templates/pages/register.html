@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+  <div class="container">
+    <div class="jumbotron">
+      {% if registered %}
+        <h3>Thank you for registering!</h3>
+        <a class="btn btn-secondary btn-sm" href="{% url 'pages:user_login' %}">
+      Einloggen 
+    </a>
+        <a class= 
+      {% else %}
+        <h3>Registrieren</h3>
+        <form enctype="multipart/form-data" method="POST">
+          {% csrf_token %}
+          {{ user_form.as_p }}
+          <input type="submit" name="" value="Weiter" class="btn btn-secondary btn-sm">
+        </form>
+      {% endif %}
+    </div>
+  </div>
+{% endblock %}

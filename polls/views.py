@@ -43,7 +43,8 @@ def vote(request, **kwargs): # game,round,question_id
         # with POST data. This prevents data from being posted twice if a
         # user hits the Back button.
         #return HttpResponseRedirect(reverse('polls:results', args=(question.id,)))
-        return HttpResponseRedirect(reverse('polls:index',kwargs=kwargs))
+        url_kwargs = {key:kwargs.get(key) for key in ['game_id', 'round_id']}
+        return HttpResponseRedirect(reverse('polls:index',kwargs=url_kwargs))
 
 # form to enter answer
 def create(request, **kwargs): # game,round,question_id
@@ -59,7 +60,7 @@ def create(request, **kwargs): # game,round,question_id
 def submit(request, **kwargs): # game,round,question_id
     current_answer = request.POST['answer']
     print("submitted answer", current_answer)
-    print("user:", request.user)
+    print("by user:", request.user)
     question = get_object_or_404(Question, pk=kwargs.get('question_id'))
 
     # TODO change this...
@@ -67,7 +68,7 @@ def submit(request, **kwargs): # game,round,question_id
 
     try:
         choice = Choice(choice_text=current_answer, question=question, 
-                        player_id=player)
+                        player=player)
         choice.save()
         question.choice_set.add(choice)
     except (KeyError, Choice.DoesNotExist):
@@ -81,4 +82,6 @@ def submit(request, **kwargs): # game,round,question_id
         # Always return an HttpResponseRedirect after successfully dealing
         # with POST data. This prevents data from being posted twice if a
         # user hits the Back button.
-        return HttpResponseRedirect(reverse('polls:index',kwargs=kwargs))
+
+        url_kwargs = {key:kwargs.get(key) for key in ['game_id', 'round_id']}
+        return HttpResponseRedirect(reverse('polls:index',kwargs=url_kwargs))

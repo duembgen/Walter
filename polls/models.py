@@ -9,6 +9,7 @@ class Game(models.Model):
 
 class Player(models.Model):
     game_id = models.ForeignKey(Game, on_delete=models.CASCADE)
+    user_id = models.ForeignKey(User, on_delete=models.CASCADE)
 
     name = models.CharField(max_length=32, default="unknown")
     scores = models.IntegerField(default=0)
