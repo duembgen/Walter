@@ -3,17 +3,19 @@ from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 
-from .models import Question, Choice, Round, Player
+from .models import Question, Choice, Round, Player, Game
 
 # Get questions and display them
 def index(request, **kwargs): #game,round_id
     this_round = get_object_or_404(Round, pk=kwargs.get('round_id'))
+    master = this_round.player.name
     latest_question_list = Question.objects.filter(round_id=this_round)
     context = {'latest_question_list': latest_question_list, 
+               'master': master,
                **kwargs}
     return render(request, 'polls/index.html', context)
 
-# Show specific question and choices
+# Show specific question and choices for voting
 def detail(request, **kwargs): #game,round,question_id
     question = get_object_or_404(Question, pk=kwargs['question_id'])
     context = {'question':question, **kwargs}
@@ -25,7 +27,7 @@ def results(request, **kwargs): #game,round,question_id
     context = {'question':question, **kwargs}
     return render(request, 'polls/results.html', context)
 
-# helper view to register submitted vote.
+# Helper view to submit vote
 def vote(request, **kwargs): # game,round,question_id
     question = get_object_or_404(Question, pk=kwargs.get('question_id'))
     try:
@@ -34,7 +36,8 @@ def vote(request, **kwargs): # game,round,question_id
         # Redisplay the question voting form.
         return render(request, 'polls/detail.html', {
             'question': question,
-            'error_message': "You didn't select a choice.",
+            'error_message': "Du hast nichts ausgewählt.",
+            **kwargs
         })
     else:
         selected_choice.votes += 1
@@ -46,7 +49,7 @@ def vote(request, **kwargs): # game,round,question_id
         url_kwargs = {key:kwargs.get(key) for key in ['game_id', 'round_id']}
         return HttpResponseRedirect(reverse('polls:index',kwargs=url_kwargs))
 
-# form to enter answer
+# Form to enter answer
 def create(request, **kwargs): # game,round,question_id
     question = get_object_or_404(Question, pk=kwargs.get('question_id'))
     context = {
@@ -56,7 +59,7 @@ def create(request, **kwargs): # game,round,question_id
     }
     return render(request, 'polls/create.html', context)
 
-# helper view to register submitted answer.
+# Helper view to register submitted answer
 def submit(request, **kwargs): # game,round,question_id
     current_answer = request.POST['answer']
     print("submitted answer", current_answer)
@@ -64,7 +67,9 @@ def submit(request, **kwargs): # game,round,question_id
     question = get_object_or_404(Question, pk=kwargs.get('question_id'))
 
     # TODO change this...
-    player = Player.objects.first()
+    game_key = kwargs.get('game_id')
+    game = Game.objects.get(secret_key=game_key)
+    player = Player.objects.get(user_id=request.user, game_id=game)
 
     try:
         choice = Choice(choice_text=current_answer, question=question, 
