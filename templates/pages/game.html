@@ -9,7 +9,7 @@
 </p>
 {% endif %}
 
-<form action="{% url 'pages:post_new_game' game_id %}" method="post">
+<form action="{% url 'pages:post_new_game' %}" method="post">
 	{% csrf_token %} 
 	<label for="secret_key">
     Spielcode eingeben:  

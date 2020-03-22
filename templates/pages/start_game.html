@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% block content %}
+<a class="btn btn-secondary btn-sm mb-3" href="{% url 'pages:index' %}">Abort Game</a>
+<h1 class="text-center mb-3"> Spiel Startseite </h1>
+<p class="text-center mb-3"> geheimer code: {{ game_id }} </p>
+
+{% if error_message %}
+<p class="alert alert-danger">
+	<strong>{{ error_message }}</strong>
+</p>
+{% endif %}
+
+{% if players %}
+<p> Currently online: </p>
+{% endif %}
+<ul>
+{% for player in players %}
+<li> {{ player }} </li>
+{% endfor %}
+</ul>
+
+<a class="btn btn-success btn-lg btn-block mt-4" href="{% url 'polls:index' game_id %}">Start game</a>
+{% endblock content %}

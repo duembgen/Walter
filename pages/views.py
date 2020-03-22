@@ -14,15 +14,24 @@ def new_game(request):
                   {'game_id':'new_id_will_be_here', 
                    'secret_key':secret_key})
 
-def post_new_game(request, game_id):
-    print('data in new_game:', game_id)
+def post_new_game(request):
+    print('data in new_game:')
     secret_key = request.POST['secret_key']
     player_name = request.POST['player_name']
+    print(secret_key, player_name)
     try:
         game = Game.objects.get(secret_key=secret_key)
-    except: 
-        raise Http404(f"Game with secret_key {secret_key} does not exist")
-    else:
-        player = Player(name=player_name, game=game)
-        player.save()
-        return HttpResponseRedirect(reverse('pages:polls', game.secret_key))
+    except Game.DoesNotExist:
+        game = Game(secret_key=secret_key)
+        game.save()
+
+    player = Player(name=player_name, game_id=game)
+    player.save()
+    #return HttpResponseRedirect(reverse('pages:index'))
+    return HttpResponseRedirect(reverse('pages:start_game', kwargs={'game_id': game.secret_key}))
+    #reverse('pages:polls', kwargs={'game_id':game.secret_key}))
+
+def start_game(request, game_id):
+    return render(request, 'pages/start_game.html', 
+                  {'game_id':game_id, 
+                   'players':['dummy1', 'dummy2']})
