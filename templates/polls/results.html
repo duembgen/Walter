@@ -10,6 +10,6 @@
 	{% endfor %}
 </ul>
 
-<a class="btn btn-secondary" href="{% url 'polls:index' %}">Back To Polls</a>
-<a class="btn btn-dark" href="{% url 'polls:detail' question.id %}">Vote again?</a>
+<a class="btn btn-secondary" href="{% url 'polls:index' game_id round_id %}">Back To Polls</a>
+<a class="btn btn-dark" href="{% url 'polls:detail' game_id round_id question.id %}">Vote again?</a>
 {% endblock %}

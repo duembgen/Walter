@@ -6,9 +6,9 @@
       <div class="card mb-3">
         <div class="card-body">
           <p class="lead">{{ question.question_text }}</p>
-          <a href="{% url 'polls:create' question.id %}" class="btn btn-primary btn-sm">Enter Answer</a>
-          <a href="{% url 'polls:detail' question.id %}" class="btn btn-primary btn-sm">Vote</a>
-          <a href="{% url 'polls:results' question.id %}" class="btn btn-secondary btn-sm">See Results</a>
+          <a href="{% url 'polls:create' game_id round_id question.id %}" class="btn btn-primary btn-sm">Enter Answer</a>
+          <a href="{% url 'polls:detail' game_id round_id question.id %}" class="btn btn-primary btn-sm">Vote</a>
+          <a href="{% url 'polls:results' game_id round_id question.id %}" class="btn btn-secondary btn-sm">See Results</a>
         </div>
       </div>
     {% endfor %}

@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% block content %}
-<a class="btn btn-secondary btn-sm mb-3" href="{% url 'polls:index' %}">Back To Polls</a>
+<a class="btn btn-secondary btn-sm mb-3" href="{% url 'polls:index' game_id round_id %}">Back To Polls</a>
 <h1 class="text-center mb-3">{{ question.question_text }}</h1>
 
 {% if error_message %}
@@ -9,7 +9,7 @@
 </p>
 {% endif %}
 
-<form action="{% url 'polls:submit' question.id %}" method="post">
+<form action="{% url 'polls:submit' game_id round_id question.id %}" method="post">
 	{% csrf_token %} 
 	<label for="answer">
     Enter answer here:  

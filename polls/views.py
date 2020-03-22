@@ -3,36 +3,34 @@ from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 
-from .models import Question, Choice
+from .models import Question, Choice, Round, Player
 
 # Get questions and display them
-def index(request, *args, **kwargs):
-    latest_question_list = Question.objects.order_by('-question_number')[:5]
-    context = {'latest_question_list': latest_question_list}
+def index(request, **kwargs): #game,round_id
+    this_round = get_object_or_404(Round, pk=kwargs.get('round_id'))
+    latest_question_list = Question.objects.filter(round_id=this_round)
+    context = {'latest_question_list': latest_question_list, 
+               **kwargs}
     return render(request, 'polls/index.html', context)
 
 # Show specific question and choices
-def detail(request, question_id, *args, **kwargs):
-  try:
-    question = Question.objects.get(pk=question_id)
-  except Question.DoesNotExist:
-    raise Http404("Question does not exist")
-  return render(request, 'polls/detail.html', { 'question': question })
+def detail(request, **kwargs): #game,round,question_id
+    question = get_object_or_404(Question, pk=kwargs['question_id'])
+    context = {'question':question, **kwargs}
+    return render(request, 'polls/detail.html', context)
 
 # Get question and display results
-def results(request, question_id, *args, **kwargs):
-  question = get_object_or_404(Question, pk=question_id)
-  return render(request, 'polls/results.html', { 'question': question })
+def results(request, **kwargs): #game,round,question_id
+    question = get_object_or_404(Question, pk=kwargs['question_id'])
+    context = {'question':question, **kwargs}
+    return render(request, 'polls/results.html', context)
 
-# Vote for a question choice
-# helper view to register submitted answer.
-def vote(request, question_id, *args, **kwargs):
-    # print(request.POST['choice'])
-    question = get_object_or_404(Question, pk=question_id)
+# helper view to register submitted vote.
+def vote(request, **kwargs): # game,round,question_id
+    question = get_object_or_404(Question, pk=kwargs.get('question_id'))
     try:
         selected_choice = question.choice_set.get(pk=request.POST['choice'])
-    except (KeyError, Choice.DoesNotExist) as e:
-        print('error:', e)
+    except (KeyError, Choice.DoesNotExist):
         # Redisplay the question voting form.
         return render(request, 'polls/detail.html', {
             'question': question,
@@ -45,30 +43,33 @@ def vote(request, question_id, *args, **kwargs):
         # with POST data. This prevents data from being posted twice if a
         # user hits the Back button.
         #return HttpResponseRedirect(reverse('polls:results', args=(question.id,)))
-        return HttpResponseRedirect(reverse('polls:index',))
+        return HttpResponseRedirect(reverse('polls:index',kwargs=kwargs))
 
 # form to enter answer
-def create(request, question_id, *args, **kwargs):
-  try:
-    question = Question.objects.get(pk=question_id)
-  except Question.DoesNotExist:
-    raise Http404("Question does not exist")
-  
-  context = {'current_answer': "my answer", 
-             'question': question
-            }
-  return render(request, 'polls/create.html', context)
+def create(request, **kwargs): # game,round,question_id
+    question = get_object_or_404(Question, pk=kwargs.get('question_id'))
+    context = {
+        'current_answer': "Enter answer here", 
+        'question': question,
+        **kwargs
+    }
+    return render(request, 'polls/create.html', context)
 
 # helper view to register submitted answer.
-def submit(request, question_id, *args, **kwargs):
+def submit(request, **kwargs): # game,round,question_id
     current_answer = request.POST['answer']
     print("submitted answer", current_answer)
-    question = get_object_or_404(Question, pk=question_id)
+    print("user:", request.user)
+    question = get_object_or_404(Question, pk=kwargs.get('question_id'))
+
+    # TODO change this...
+    player = Player.objects.first()
+
     try:
-        choice = Choice(choice_text=current_answer, question=question)
+        choice = Choice(choice_text=current_answer, question=question, 
+                        player_id=player)
         choice.save()
         question.choice_set.add(choice)
-        #selected_choice = question.choice_set.get(pk=request.POST['choice'])
     except (KeyError, Choice.DoesNotExist):
         # Redisplay the question voting form.
         return render(request, 'polls/create.html', {
@@ -80,4 +81,4 @@ def submit(request, question_id, *args, **kwargs):
         # Always return an HttpResponseRedirect after successfully dealing
         # with POST data. This prevents data from being posted twice if a
         # user hits the Back button.
-        return HttpResponseRedirect(reverse('polls:index',))
+        return HttpResponseRedirect(reverse('polls:index',kwargs=kwargs))

@@ -11,13 +11,11 @@
 {% endif %}
 
 {% if players %}
-<p> Currently online: </p>
+<p> Momentan online: </p>
 {% endif %}
-<ul>
 {% for player in players %}
-<li> {{ player }} </li>
+<p> {{ player }} </p>
 {% endfor %}
-</ul>
 
-<a class="btn btn-success btn-lg btn-block mt-4" href="{% url 'polls:index' game_id %}">Start game</a>
+<a class="btn btn-success btn-lg btn-block mt-4" href="{% url 'polls:index' game_id round_id %}">Spiel starten</a>
 {% endblock content %}
