@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% block content %}
+<a class="btn btn-secondary btn-sm mb-3" href="{% url 'pages:index' %}">Back To Index</a>
+<h1 class="text-center mb-3">New game</h1>
+
+{% if error_message %}
+<p class="alert alert-danger">
+	<strong>{{ error_message }}</strong>
+</p>
+{% endif %}
+
+<form action="{% url 'pages:post_new_game' game_id %}" method="post">
+	{% csrf_token %} 
+	<label for="secret_key">
+    Spielcode eingeben:  
+  </label>
+ 	<div class="form-group">
+			<input
+				type="text"
+				name="secret_key"
+				class="form-control"
+				id="secret_key"
+        value="{{ secret_key }}"
+			/>
+	</div>
+	<label for="player_name">
+    Dein Pseudonym:  
+  </label>
+ 	<div class="form-group">
+			<input
+				type="text"
+				name="player_name"
+				class="form-control"
+				id="player_name"
+        value=""
+			/>
+	</div>
+	<input type="submit" value="Submit" class="btn btn-success btn-lg btn-block mt-4" />
+</form>
+{% endblock %}

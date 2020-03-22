@@ -1,10 +1,19 @@
 from django.contrib import admin
 
-from .models import Question, Choice
+from .models import Round, Question, Choice, Game, Player
 
-admin.site.site_header = "Pollster Admin"
-admin.site.site_title = "Pollster Admin Area"
-admin.site.index_title = "Welcome to the Pollster admin area"
+admin.site.site_header = "Walter Admin"
+admin.site.site_title = "Walter Admin Area"
+admin.site.index_title = "Welcome to the Walter admin area"
+
+class RoundInline(admin.TabularInline):
+    model = Round
+    extra = 3
+
+
+class PlayerInline(admin.TabularInline):
+    model = Player
+    extra = 3
 
 
 class ChoiceInline(admin.TabularInline):
@@ -12,12 +21,24 @@ class ChoiceInline(admin.TabularInline):
     extra = 3
 
 
+class QuestionInline(admin.TabularInline):
+    model = Question
+    extra = 3
+
+
 class QuestionAdmin(admin.ModelAdmin):
-    fieldsets = [(None, {'fields': ['question_text']}),
-                 ('Date Information', {'fields': ['pub_date'], 'classes': ['collapse']}), ]
     inlines = [ChoiceInline]
 
 
-# admin.site.register(Question)
-# admin.site.register(Choice)
+class RoundAdmin(admin.ModelAdmin):
+    inlines = [QuestionInline]
+
+
+class GameAdmin(admin.ModelAdmin):
+    inlines = [RoundInline, PlayerInline]
+
+
+admin.site.register(Player)
+admin.site.register(Game)
 admin.site.register(Question, QuestionAdmin)
+admin.site.register(Round, RoundAdmin)
