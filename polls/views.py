@@ -5,6 +5,13 @@ from django.urls import reverse
 
 from .models import Question, Choice, Round, Player, Game, Vote
 
+def get_player(request_user, secret_key):
+    game = Game.objects.get(secret_key=secret_key)
+    player = get_object_or_404(Player, user=request_user, 
+                               game=game)
+    return player
+
+
 # Get questions and display them
 def index(request, **kwargs): #game,round_id
     this_round = get_object_or_404(Round, pk=kwargs.get('round_id'))
@@ -17,10 +24,7 @@ def index(request, **kwargs): #game,round_id
 
 # Show specific question and choices for voting
 def detail(request, **kwargs): #game,round,question_id
-    game_key = kwargs.get('secret_key')
-    game = Game.objects.get(secret_key=kwargs.get('secret_key'))
-    player = get_object_or_404(Player, user=request.user, 
-                               game=game)
+    player = get_player(request.user, kwargs.get('secret_key'))
     question = get_object_or_404(Question, pk=kwargs['question_id'])
 
     try:
@@ -47,9 +51,20 @@ def results(request, **kwargs): #game,round,question_id
 # Helper view to submit vote
 def vote(request, **kwargs): # game,round,question_id
     question = get_object_or_404(Question, pk=kwargs.get('question_id'))
+    player = get_player(request.user, kwargs.get('secret_key'))
     try:
         selected_choice = question.choice_set.get(pk=request.POST['choice'])
-    except:
+        # create a new vote, or change an existing one.
+        try:
+            vote = Vote.objects.get(question=question, player=player) 
+            vote.choice = selected_choice
+            vote.save()
+        except Vote.DoesNotExist:
+            vote = Vote(question=question, player=player, choice=selected_choice) 
+            vote.save()
+
+    except Exception as e:
+        print(e)
         #Redisplay the question voting form.
         return render(request, 'polls/detail.html', {
           'question': question,
