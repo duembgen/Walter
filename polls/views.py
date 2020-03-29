@@ -81,7 +81,7 @@ def submit(request, **kwargs): # game,round,question_id
         return render(request, 'polls/create.html', {
             'question': question,
             'current_answer': current_answer,
-            'error_message': "Invalid answer",
+            'error_message': "Antwort nicht gültig",
         })
     else:
         # Always return an HttpResponseRedirect after successfully dealing
@@ -89,4 +89,4 @@ def submit(request, **kwargs): # game,round,question_id
         # user hits the Back button.
 
         url_kwargs = {key:kwargs.get(key) for key in ['game_id', 'round_id']}
-        return HttpResponseRedirect(reverse('polls:index',kwargs=url_kwargs))
+        return HttpResponseRedirect(reverse('polls:index', kwargs=url_kwargs))

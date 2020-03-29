@@ -1,11 +1,13 @@
 {% extends 'base.html' %}
 {% block content %}
-<a class="btn btn-secondary btn-sm mb-3" href="{% url 'pages:index' %}">Back To Index</a>
-<h1 class="text-center mb-3">New game</h1>
+<a class="btn btn-secondary btn-sm mb-3" href="{% url 'pages:index' %}"> Startseite </a>
+<h1 class="text-center mb-3">Neues Spiel</h1>
 
 {% if error_message %}
 <p class="alert alert-danger">
 	<strong>{{ error_message }}</strong>
+  {# TODO: do not show "Zum Spiel" if duplicate name error message. #}
+  <a class="btn btn-secondary btn-sm mb-3" href="{% url 'pages:index_game' secret_key %}"> Zum Spiel </a>
 </p>
 {% endif %}
 
@@ -32,7 +34,7 @@
 				name="player_name"
 				class="form-control"
 				id="player_name"
-        value=""
+        value="{{ player_name }}"
 			/>
 	</div>
 	<input type="submit" value="Submit" class="btn btn-success btn-lg btn-block mt-4" />

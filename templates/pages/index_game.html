@@ -14,7 +14,7 @@
 <p> Momentan online: </p>
 {% endif %}
 {% for player in players %}
-<p> {{ player }} </p>
+<p> {{ player }}, from {{ player.user_id }} </p>
 {% endfor %}
 
 <a class="btn btn-success btn-lg btn-block mt-4" href="{% url 'polls:index' game_id round_id %}">Spiel starten</a>

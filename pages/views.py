@@ -9,33 +9,62 @@ from polls.models import Game, Player, Round, Question
 
 from .forms import UserForm
 
+DEBUG = 'pages/views'
+
+# start page
 def index(request):
     return render(request, 'pages/index.html')
 
-@login_required(login_url='/login?error_message="You need to log in!"')
-def new_game(request):
-    secret_key = get_random_string(10)
-    return render(request, 'pages/game.html', 
-                  {'secret_key':secret_key})
+@login_required(login_url='/login?error_message="Du must eingeloggt sein!"')
 
-@login_required(login_url='/login?error_message="You need to log in!"')
+# create new game
+@login_required(login_url='/login?error_message="Du must eingeloggt sein!"')
+def new_game(request, **kwargs):
+    print(f"{DEBUG} new_game kwargs: {kwargs}")
+
+    # set the secret key to random if it was not already set.
+    secret_key = get_random_string(10)
+    kwargs['secret_key'] = kwargs.get('secret_key', secret_key)
+    return render(request, 'pages/new_game.html', context=kwargs)
+
+# helper function to create or load chosen game. 
+@login_required(login_url='/login?error_message="Du must eingeloggt sein!"')
 def post_new_game(request):
-    print('data in new_game:')
     secret_key = request.POST['secret_key']
     player_name = request.POST['player_name']
-    print(secret_key, player_name)
+
+    print(f'{DEBUG}: data in new_game:', secret_key, player_name)
+
     try:
         game = Game.objects.get(secret_key=secret_key)
+        print(f'{DEBUG}: loaded game of key {secret_key}')
     except Game.DoesNotExist:
         game = Game(secret_key=secret_key)
         game.save()
 
+    # make sure this user does not already have a player in the game.
+    context = {
+        'secret_key': secret_key,
+        'player_name': player_name
+    }
+    if Player.objects.filter(game_id=game, name=player_name):
+        # TODO: I want to pass a context here but I can't
+        # It isi easy with render but then that's not "safe". 
+        # Need to figure out how to do this...
+        # return HttpResponseRedirect(reverse('pages:new_game'))
+        context['error_message'] = "Diesen Namen hat schon jemand anderes benutzt!"
+        return render(request, 'pages/new_game.html', context=context)
+    elif Player.objects.filter(game_id=game, user_id=request.user):
+        context['error_message'] = f"Du ({request.user.username}) bist schon im Spiel!"
+        return render(request, 'pages/new_game.html', context=context)
+
     player = Player(name=player_name, game_id=game, user_id=request.user)
     player.save()
-    return HttpResponseRedirect(reverse('pages:start_game', kwargs={'game_id': game.secret_key}))
+    return HttpResponseRedirect(reverse('pages:index_game', kwargs={'game_id': game.secret_key}))
 
-@login_required(login_url='/login?error_message="You need to log in!"')
-def start_game(request, game_id):
+# game start page
+@login_required(login_url='/login?error_message="Du must eingeloggt sein!"')
+def index_game(request, game_id):
     game = Game.objects.get(secret_key=game_id)
 
     # find out which players are in this game.
@@ -47,15 +76,11 @@ def start_game(request, game_id):
                           question_number=i,
                           question_text=f"Frage {i}") for i in range(1, 4)]
     [q.save() for q in questions]
-    return render(request, 'pages/start_game.html', 
+    return render(request, 'pages/index_game.html', 
                   {'game_id':game_id, 
                    'round_id': first_round.pk,
                    'players':players})
 
-@login_required
-def special(request):
-    return HttpResponse("You are logged in !")
-    
 @login_required
 def user_logout(request):
     logout(request)
