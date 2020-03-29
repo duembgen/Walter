@@ -2,18 +2,14 @@
 {% block content %} 
 <a class="btn btn-secondary btn-sm mb-3" href="{% url 'pages:index_game' secret_key %}">Restart Game</a>
 <h1 class="text-center mb-3"> Runde {{ round_id }}: {{ master }} </h1>
-  {% if latest_question_list %}
-    {% for question in latest_question_list %}
-      <div class="card mb-3">
-        <div class="card-body">
-          <p class="lead">{{ question.question_text }}</p>
-          <a href="{% url 'polls:create' secret_key round_id question.id %}" class="btn btn-primary btn-sm">Antwort eingeben</a>
-          <a href="{% url 'polls:detail' secret_key round_id question.id %}" class="btn btn-primary btn-sm">Abstimmen</a>
-          <a href="{% url 'polls:results' secret_key round_id question.id %}" class="btn btn-secondary btn-sm">Resultate</a>
-        </div>
-      </div>
-    {% endfor %}
-  {% else %}
-    <p>No polls available</p>
-  {% endif %}
+{% for question in latest_question_list %}
+  <div class="card mb-3">
+    <div class="card-body">
+      <p class="lead">{{ question.question_text }}</p>
+      <a href="{% url 'polls:create' secret_key round_id question.id %}" class="btn btn-primary btn-sm">Antworten</a>
+      <a href="{% url 'polls:detail' secret_key round_id question.id %}" class="btn btn-primary btn-sm">Abstimmen</a>
+      <a href="{% url 'polls:results' secret_key round_id question.id %}" class="btn btn-secondary btn-sm">Resultate</a>
+    </div>
+  </div>
+{% endfor %}
 {% endblock %}

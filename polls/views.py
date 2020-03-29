@@ -3,7 +3,7 @@ from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 
-from .models import Question, Choice, Round, Player, Game
+from .models import Question, Choice, Round, Player, Game, Vote
 
 # Get questions and display them
 def index(request, **kwargs): #game,round_id
@@ -17,8 +17,25 @@ def index(request, **kwargs): #game,round_id
 
 # Show specific question and choices for voting
 def detail(request, **kwargs): #game,round,question_id
+    game_key = kwargs.get('secret_key')
+    game = Game.objects.get(secret_key=kwargs.get('secret_key'))
+    player = get_object_or_404(Player, user=request.user, 
+                               game=game)
     question = get_object_or_404(Question, pk=kwargs['question_id'])
-    context = {'question':question, **kwargs}
+
+    try:
+        current_vote = Vote.objects.get(player=player, question=question)
+        current_choice = current_vote.choice
+        print('found vote', vote)
+    except Vote.DoesNotExist:
+        current_choice = -1
+
+    users_choice = Choice.objects.get(player=player, question=question)
+
+    context = {'question':question, 
+               'current_choice': current_choice,
+               'users_choice': users_choice,
+               **kwargs}
     return render(request, 'polls/detail.html', context)
 
 # Get question and display results
@@ -32,22 +49,22 @@ def vote(request, **kwargs): # game,round,question_id
     question = get_object_or_404(Question, pk=kwargs.get('question_id'))
     try:
         selected_choice = question.choice_set.get(pk=request.POST['choice'])
-    except (KeyError, Choice.DoesNotExist):
-        # Redisplay the question voting form.
+    except:
+        #Redisplay the question voting form.
         return render(request, 'polls/detail.html', {
-            'question': question,
-            'error_message': "Du hast nichts ausgewählt.",
-            **kwargs
+          'question': question,
+          'error_message': "Komisch, ungültige Antwort.",
+          **kwargs
         })
-    else:
-        selected_choice.votes += 1
-        selected_choice.save()
-        # Always return an HttpResponseRedirect after successfully dealing
-        # with POST data. This prevents data from being posted twice if a
-        # user hits the Back button.
-        #return HttpResponseRedirect(reverse('polls:results', args=(question.id,)))
-        url_kwargs = {key:kwargs.get(key) for key in ['secret_key', 'round_id']}
-        return HttpResponseRedirect(reverse('polls:index',kwargs=url_kwargs))
+
+    selected_choice.votes += 1
+    selected_choice.save()
+    # Always return an HttpResponseRedirect after successfully dealing
+    # with POST data. This prevents data from being posted twice if a
+    # user hits the Back button.
+    #return HttpResponseRedirect(reverse('polls:results', args=(question.id,)))
+    url_kwargs = {key:kwargs.get(key) for key in ['secret_key', 'round_id']}
+    return HttpResponseRedirect(reverse('polls:index',kwargs=url_kwargs))
 
 # Form to enter answer
 def create(request, **kwargs): # game,round,question_id

@@ -79,7 +79,10 @@ class Choice(models.Model):
 
 
 class Vote(models.Model):
+    # each player has one choice for each question.
     question = models.ForeignKey(Question, on_delete=models.CASCADE)
     player = models.ForeignKey(Player, on_delete=models.CASCADE)
+
+    choice = models.ForeignKey(Choice, on_delete=models.CASCADE, default=0, null=True, blank=True)
 
 

@@ -19,6 +19,13 @@
 				class="form-check-input"
 				id="choice{{ forloop.counter }}"
 				value="{{ choice.id }}"
+    {% if current_choice == choice %}
+        checked
+    {% endif %}
+    {# TODO maybe put this back if everything else works #}
+    {#    {% if users_choice == choice %} #}
+    {# disabled  #}
+    {#{% endif %} #}
 			/>
 			<label for="choice{{ forloop.counter }}">{{ choice.choice_text }}</label
 			>
