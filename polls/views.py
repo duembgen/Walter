@@ -53,41 +53,54 @@ def vote(request, **kwargs): # game,round,question_id
 def create(request, **kwargs): # game,round,question_id
     question = get_object_or_404(Question, pk=kwargs.get('question_id'))
     game = get_object_or_404(Game, secret_key=kwargs.get('secret_key'))
+    print('looking for', request.user, game)
     player = get_object_or_404(Player, user=request.user, game=game)
-    current_answer = get_object_or_404(Choice, question=question, player=player)
+    try:
+        current_answer = get_object_or_404(Choice, question=question, player=player)
+    except:
+        current_answer = ""
+
     context = {
         'current_answer': current_answer, 
         'question': question,
         **kwargs
     }
-    return render(request, 'polls/create.html', context)
+    print('context:', context)
+    return render(request, 'polls/create.html', context=context)
 
 # Helper view to register submitted answer
 def submit(request, **kwargs): # game,round,question_id
+    print('submitted', kwargs)
     current_answer = request.POST['answer']
     question = get_object_or_404(Question, pk=kwargs.get('question_id'))
 
-    # TODO change this...
     game_key = kwargs.get('secret_key')
     game = Game.objects.get(secret_key=kwargs.get('secret_key'))
     player = Player.objects.get(user=request.user, game=game)
 
     try:
+        choice = Choice.objects.get(question=question, player=player)
+        choice.choice_text = current_answer
+        choice.save()
+    except Choice.DoesNotExist:
         choice = Choice(choice_text=current_answer, question=question, 
                         player=player)
         choice.save()
         question.choice_set.add(choice)
-    except (KeyError, Choice.DoesNotExist):
+    except Exception as e:
         # Redisplay the question voting form.
+        print('error occured...', e)
         return render(request, 'polls/create.html', {
             'question': question,
             'current_answer': current_answer,
             'error_message': "Antwort nicht gültig",
+            **kwargs
         })
-    else:
-        # Always return an HttpResponseRedirect after successfully dealing
-        # with POST data. This prevents data from being posted twice if a
-        # user hits the Back button.
 
-        url_kwargs = {key:kwargs.get(key) for key in ['secret_key', 'round_id']}
-        return HttpResponseRedirect(reverse('polls:index', kwargs=url_kwargs))
+    # Always return an HttpResponseRedirect after successfully dealing
+    # with POST data. This prevents data from being posted twice if a
+    # user hits the Back button.
+
+    url_kwargs = {key:kwargs.get(key) for key in ['secret_key', 'round_id']}
+    print('url kwargs:', url_kwargs)
+    return HttpResponseRedirect(reverse('polls:index', kwargs=url_kwargs))

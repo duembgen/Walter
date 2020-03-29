@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Round, Question, Choice, Game, Player
+from .models import Round, Question, Choice, Game, Player, Vote
 
 admin.site.site_header = "Walter Admin"
 admin.site.site_title = "Walter Admin Area"
@@ -42,3 +42,5 @@ admin.site.register(Player)
 admin.site.register(Game)
 admin.site.register(Question, QuestionAdmin)
 admin.site.register(Round, RoundAdmin)
+admin.site.register(Choice)
+admin.site.register(Vote)
