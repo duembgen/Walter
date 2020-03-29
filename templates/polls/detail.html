@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% block content %}
-<a class="btn btn-secondary btn-sm mb-3" href="{% url 'polls:index' game_id round_id %}">Zurück zu Übersicht</a>
+<a class="btn btn-secondary btn-sm mb-3" href="{% url 'polls:index' secret_key round_id %}">Zurück zu Übersicht</a>
 <h1 class="text-center mb-3">{{ question.question_text }}</h1>
 
 {% if error_message %}
@@ -9,7 +9,7 @@
 </p>
 {% endif %}
 
-<form action="{% url 'polls:vote' game_id round_id question.id %}" method="post">
+<form action="{% url 'polls:vote' secret_key round_id question.id %}" method="post">
 	{% csrf_token %} 
 	{% for choice in question.choice_set.all %}
 		<div class="form-check">

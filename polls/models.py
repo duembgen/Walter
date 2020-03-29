@@ -4,9 +4,9 @@ from django.contrib.auth.models import User
 def create_round(game):
     # choose next "master" player 
     try:
-        curr_player = Player.objects.get(game_id=game, is_master=True)
+        curr_player = Player.objects.get(game=game, is_master=True)
     except Exception as e:
-        player = Player.objects.filter(game_id=game)[0]
+        player = Player.objects.filter(game=game)[0]
     else:
         curr_player.is_master = False
         curr_player.save()
@@ -15,9 +15,9 @@ def create_round(game):
     player.is_master = True
     player.save()
 
-    first_round = Round(game_id=game, player=player, number=1)
+    first_round = Round(game=game, player=player, number=1)
     first_round.save()
-    questions = [Question(round_id=first_round, 
+    questions = [Question(round=first_round, 
                           question_number=i,
                           question_text=f"Frage {i}") for i in range(1, 4)]
     [q.save() for q in questions]
@@ -26,14 +26,14 @@ def create_round(game):
 
 class Game(models.Model):
     secret_key = models.CharField(max_length=32, default="")
-    current_round = models.ForeignKey('Round', on_delete=models.CASCADE, null=True, blank=True)
+    current_round = models.ForeignKey('Round', on_delete=models.CASCADE, null=True, blank=True, related_name='+')
     def __str__(self):
         return self.secret_key[:5]
 
 
 class Player(models.Model):
-    game_id = models.ForeignKey(Game, on_delete=models.CASCADE)
-    user_id = models.ForeignKey(User, on_delete=models.CASCADE, default=None)
+    game = models.ForeignKey(Game, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, default=None)
 
     name = models.CharField(max_length=32, default="unknown")
     score = models.IntegerField(default=0)
@@ -45,7 +45,7 @@ class Player(models.Model):
 
 
 class Round(models.Model):
-    game_id = models.ForeignKey(Game, on_delete=models.CASCADE)
+    game = models.ForeignKey(Game, on_delete=models.CASCADE)
     player = models.ForeignKey(Player, on_delete=models.CASCADE, 
                                default=None)
 
@@ -56,7 +56,7 @@ class Round(models.Model):
 
 
 class Question(models.Model):
-    round_id = models.ForeignKey(Round, on_delete=models.CASCADE, 
+    round = models.ForeignKey(Round, on_delete=models.CASCADE, 
                                  default=None)
 
     question_number = models.IntegerField(default=1)

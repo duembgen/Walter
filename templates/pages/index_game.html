@@ -1,8 +1,8 @@
 {% extends 'base.html' %}
 {% block content %}
-<a class="btn btn-secondary btn-sm mb-3" href="{% url 'pages:quit_game' game_id %}">Spiel verlassen</a>
+<a class="btn btn-secondary btn-sm mb-3" href="{% url 'pages:quit_game' secret_key %}">Spiel verlassen</a>
 <h1 class="text-center mb-3"> Spielübersicht  </h1>
-<p class="text-center mb-3"> Geheimcode: {{ game_id }} </p>
+<p class="text-center mb-3"> Geheimcode: {{ secret_key }} </p>
 
 {% if error_message %}
 <p class="alert alert-danger">
@@ -15,9 +15,9 @@
 {% endif %}
 {% for player in players %}
 <p {% if player.is_master %}class="text-success" {% endif %}>
-    Spieler {{ player }} (von Benutzer {{ player.user_id }}), Punkte: {{ player.score }} 
+    Spieler {{ player }} (von Benutzer {{ player.user }}), Punkte: {{ player.score }} 
   </p>
 {% endfor %}
 
-<a class="btn btn-success btn-lg btn-block mt-4" href="{% url 'polls:index' game_id round_id %}">Spielen</a>
+<a class="btn btn-success btn-lg btn-block mt-4" href="{% url 'polls:index' secret_key round_id %}">Spielen</a>
 {% endblock content %}

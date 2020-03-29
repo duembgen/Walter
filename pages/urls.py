@@ -10,7 +10,7 @@ urlpatterns = [
     path('register/', views.register, name='register'),
     path('new_game/', views.new_game, name='new_game'),
     path('post_new_game/', views.post_new_game, name='post_new_game'),
-    path('<str:game_id>/quit_game', views.quit_game, name='quit_game'),
-    path('<str:game_id>/', views.index_game, name='index_game'),
-    path('<str:game_id>/polls/', include('polls.urls')),
+    path('<str:secret_key>/quit_game', views.quit_game, name='quit_game'),
+    path('<str:secret_key>/', views.index_game, name='index_game'),
+    path('<str:secret_key>/polls/', include('polls.urls')),
 ]

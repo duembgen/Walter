@@ -28,11 +28,11 @@ def new_game(request, **kwargs):
     kwargs['secret_key'] = kwargs.get('secret_key', secret_key)
     return render(request, 'pages/new_game.html', context=kwargs)
 
-def quit_game(request, game_id, **kwargs):
+def quit_game(request, secret_key, **kwargs):
     # TODO: remove the player from the list
     # if it was this player's turn, assign someone else.
-    game = Game.objects.get(secret_key=game_id)
-    player = Player.objects.get(user_id=request.user, game_id=game
+    game = Game.objects.get(secret_key=secret_key)
+    player = Player.objects.get(user=request.user, game=game
                                 )
     print(f"{DEBUG}: {player} left.")
     return render(request, 'pages/index.html')
@@ -57,34 +57,34 @@ def post_new_game(request):
         'secret_key': secret_key,
         'player_name': player_name
     }
-    if Player.objects.filter(game_id=game, name=player_name):
+    if Player.objects.filter(game=game, name=player_name):
         # TODO: I want to pass a context here but I can't
         # It isi easy with render but then that's not "safe". 
         # Need to figure out how to do this...
         # return HttpResponseRedirect(reverse('pages:new_game'))
         context['error_message'] = "Diesen Namen hat schon jemand anderes benutzt!"
         return render(request, 'pages/new_game.html', context=context)
-    elif Player.objects.filter(game_id=game, user_id=request.user):
+    elif Player.objects.filter(game=game, user=request.user):
         context['error_message'] = f"Du ({request.user.username}) bist schon im Spiel!"
         return render(request, 'pages/new_game.html', context=context)
 
-    player = Player(name=player_name, game_id=game, user_id=request.user)
+    player = Player(name=player_name, game=game, user=request.user)
     player.save()
 
     first_round = create_round(game)
     game.current_round = first_round
     game.save()
-    return HttpResponseRedirect(reverse('pages:index_game', kwargs={'game_id': game.secret_key }))
+    return HttpResponseRedirect(reverse('pages:index_game', kwargs={'secret_key': game.secret_key }))
 
 # game start page
 @login_required(login_url='/login?error_message="Du must eingeloggt sein!"')
-def index_game(request, game_id):
-    game = Game.objects.get(secret_key=game_id)
+def index_game(request, secret_key):
+    game = Game.objects.get(secret_key=secret_key)
     current_round = Round.objects.get(pk=game.current_round.pk)
     # find out which players are in this game.
-    players = Player.objects.filter(game_id=game)
+    players = Player.objects.filter(game=game)
     return render(request, 'pages/index_game.html', 
-                  {'game_id':game_id, 
+                  {'secret_key':secret_key, 
                    'round_id': current_round.pk,
                    'players':players})
 

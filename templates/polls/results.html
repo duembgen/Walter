@@ -10,5 +10,5 @@
 	{% endfor %}
 </ul>
 
-<a class="btn btn-secondary" href="{% url 'polls:index' game_id round_id %}">Zurück zu Übersicht</a>
+<a class="btn btn-secondary" href="{% url 'polls:index' secret_key round_id %}">Zurück zu Übersicht</a>
 {% endblock %}

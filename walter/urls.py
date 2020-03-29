@@ -22,5 +22,5 @@ urlpatterns = [
     #path('', views.index, name='index'),
     path('', include('pages.urls')),
     path('admin/', admin.site.urls),
-    path('<str:game_id>/polls/', include('polls.urls')),
+    path('<str:secret_key>/polls/', include('polls.urls')),
 ]

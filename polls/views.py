@@ -9,7 +9,7 @@ from .models import Question, Choice, Round, Player, Game
 def index(request, **kwargs): #game,round_id
     this_round = get_object_or_404(Round, pk=kwargs.get('round_id'))
     master = this_round.player.name
-    latest_question_list = Question.objects.filter(round_id=this_round)
+    latest_question_list = Question.objects.filter(round=this_round)
     context = {'latest_question_list': latest_question_list, 
                'master': master,
                **kwargs}
@@ -46,14 +46,17 @@ def vote(request, **kwargs): # game,round,question_id
         # with POST data. This prevents data from being posted twice if a
         # user hits the Back button.
         #return HttpResponseRedirect(reverse('polls:results', args=(question.id,)))
-        url_kwargs = {key:kwargs.get(key) for key in ['game_id', 'round_id']}
+        url_kwargs = {key:kwargs.get(key) for key in ['secret_key', 'round_id']}
         return HttpResponseRedirect(reverse('polls:index',kwargs=url_kwargs))
 
 # Form to enter answer
 def create(request, **kwargs): # game,round,question_id
     question = get_object_or_404(Question, pk=kwargs.get('question_id'))
+    game = get_object_or_404(Game, secret_key=kwargs.get('secret_key'))
+    player = get_object_or_404(Player, user=request.user, game=game)
+    current_answer = get_object_or_404(Choice, question=question, player=player)
     context = {
-        'current_answer': "Enter answer here", 
+        'current_answer': current_answer, 
         'question': question,
         **kwargs
     }
@@ -62,14 +65,12 @@ def create(request, **kwargs): # game,round,question_id
 # Helper view to register submitted answer
 def submit(request, **kwargs): # game,round,question_id
     current_answer = request.POST['answer']
-    print("submitted answer", current_answer)
-    print("by user:", request.user)
     question = get_object_or_404(Question, pk=kwargs.get('question_id'))
 
     # TODO change this...
-    game_key = kwargs.get('game_id')
-    game = Game.objects.get(secret_key=game_key)
-    player = Player.objects.get(user_id=request.user, game_id=game)
+    game_key = kwargs.get('secret_key')
+    game = Game.objects.get(secret_key=kwargs.get('secret_key'))
+    player = Player.objects.get(user=request.user, game=game)
 
     try:
         choice = Choice(choice_text=current_answer, question=question, 
@@ -88,5 +89,5 @@ def submit(request, **kwargs): # game,round,question_id
         # with POST data. This prevents data from being posted twice if a
         # user hits the Back button.
 
-        url_kwargs = {key:kwargs.get(key) for key in ['game_id', 'round_id']}
+        url_kwargs = {key:kwargs.get(key) for key in ['secret_key', 'round_id']}
         return HttpResponseRedirect(reverse('polls:index', kwargs=url_kwargs))
