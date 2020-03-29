@@ -2,9 +2,11 @@
 {% block content %}
 
 {% if error_message %}
+{% for e in error_message %}
 <p class="alert alert-danger">
-	<strong>{{ error_message }}</strong>
+	<strong>{{ e }}</strong>
 </p>
+{% endfor %}
 {% endif %}
 
 

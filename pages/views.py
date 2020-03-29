@@ -11,15 +11,16 @@ from polls.models import Game, Player, Round, Question, create_round
 from .forms import UserForm
 
 DEBUG = 'pages/views'
+LOGIN_URL = '/login?error_message=Du+musst+dich+einloggen+um+zu+spielen!'
 
 # start page
 def index(request):
     return render(request, 'pages/index.html')
 
-@login_required(login_url='/login?error_message="Du must eingeloggt sein!"')
+@login_required(login_url=LOGIN_URL)
 
 # create new game
-@login_required(login_url='/login?error_message="Du must eingeloggt sein!"')
+@login_required(login_url=LOGIN_URL)
 def new_game(request, **kwargs):
     print(f"{DEBUG} new_game kwargs: {kwargs}")
 
@@ -38,7 +39,7 @@ def quit_game(request, secret_key, **kwargs):
     return render(request, 'pages/index.html')
 
 # helper function to create or load chosen game. 
-@login_required(login_url='/login?error_message="Du must eingeloggt sein!"')
+@login_required(login_url=LOGIN_URL)
 def post_new_game(request):
     secret_key = request.POST['secret_key']
     player_name = request.POST['player_name']
@@ -77,7 +78,7 @@ def post_new_game(request):
     return HttpResponseRedirect(reverse('pages:index_game', kwargs={'secret_key': game.secret_key }))
 
 # game start page
-@login_required(login_url='/login?error_message="Du must eingeloggt sein!"')
+@login_required(login_url=LOGIN_URL)
 def index_game(request, secret_key):
     game = Game.objects.get(secret_key=secret_key)
     current_round = Round.objects.get(pk=game.current_round.pk)
