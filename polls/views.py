@@ -5,6 +5,44 @@ from django.urls import reverse
 
 from .models import Question, Choice, Round, Player, Game, Vote
 
+def update_choices(question):
+    choices = Choice.objects.filter(question=question)
+    for choice in choices: 
+        votes = Vote.objects.filter(choice=choice)
+        choice.votes = len(votes)
+        choice.save()
+
+def update_player_points(game):
+    #all_players = Player.objects.filter(game=game)
+    for player in game.player_set.all():
+        player.score = 0
+        player.save()
+
+    # count how many players voted for your choice.
+    current_round = game.current_round
+    for question in current_round.question_set.all():
+        for choice in question.choice_set.all():
+            choice.player.score += choice.votes 
+            choice.player.save()
+
+    # count if you voted for the corret choice.
+    for question in current_round.question_set.all():
+        master = Player.objects.get(game=game, is_master=True)
+
+        try:
+            correct_choice = Choice.objects.get(player=master, question=question)
+        except: 
+            print('master {master} did not enter a choice yet')
+            continue
+
+        for player in game.player_set.all():
+            try:
+                vote = Vote.objects.get(player=player, question=question)
+                if vote.choice == correct_choice:
+                    player.score += 1
+            except:
+                print(f'did not find a vote for player {player} on question {question}')
+
 def get_player(request_user, secret_key):
     game = Game.objects.get(secret_key=secret_key)
     player = get_object_or_404(Player, user=request_user, game=game)
@@ -13,6 +51,8 @@ def get_player(request_user, secret_key):
 # Get questions and display them
 def index(request, **kwargs): #game,round_id
     game = get_object_or_404(Game, secret_key=kwargs.get('secret_key'))
+    update_player_points(game)
+
     this_round = game.current_round 
     round_id = kwargs.get('round_id')
     if this_round.id != round_id:
@@ -46,7 +86,12 @@ def detail(request, **kwargs): #game,round,question_id
 
 # Get question and display results
 def results(request, **kwargs): #game,round,question_id
-    question = get_object_or_404(Question, id=kwargs['question_id'])
+    question = get_object_or_404(Question, id=kwargs.get('question_id'))
+    update_choices(question)
+
+    game = get_object_or_404(Game, secret_key=kwargs.get('secret_key'))
+    update_player_points(game)
+
     context = {'question':question, **kwargs}
     return render(request, 'polls/results.html', context)
 

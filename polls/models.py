@@ -79,6 +79,8 @@ class Question(models.Model):
 
 
 class Choice(models.Model):
+    class Meta:
+        ordering = ['choice_text']
     question = models.ForeignKey(Question, on_delete=models.CASCADE)
     player = models.ForeignKey(Player, on_delete=models.CASCADE, 
                                default=None)
@@ -96,5 +98,3 @@ class Vote(models.Model):
     player = models.ForeignKey(Player, on_delete=models.CASCADE)
 
     choice = models.ForeignKey(Choice, on_delete=models.CASCADE, default=0, null=True, blank=True)
-
-

@@ -5,7 +5,7 @@
 {% for question in latest_question_list %}
   <div class="card mb-3">
     <div class="card-body">
-      <p class="lead">{{ question.question_text }} (id: {{question.id}}) </p>
+      <p class="lead">{{ question.question_text }} (id {{question.id}}) </p>
       <a href="{% url 'polls:create' secret_key round_id question.id %}" class="btn btn-primary btn-sm">Antworten</a>
       <a href="{% url 'polls:detail' secret_key round_id question.id %}" class="btn btn-primary btn-sm">Abstimmen</a>
       <a href="{% url 'polls:results' secret_key round_id question.id %}" class="btn btn-secondary btn-sm">Resultate</a>
