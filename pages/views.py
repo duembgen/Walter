@@ -17,8 +17,6 @@ LOGIN_URL = '/login?error_message=Du+musst+dich+einloggen+um+zu+spielen!'
 def index(request):
     return render(request, 'pages/index.html')
 
-@login_required(login_url=LOGIN_URL)
-
 # create new game
 @login_required(login_url=LOGIN_URL)
 def new_game(request, **kwargs):
@@ -74,26 +72,24 @@ def post_new_game(request):
         context['error_message'] = f"Du ({request.user.username}) bist schon im Spiel!"
         return render(request, 'pages/new_game.html', context=context)
 
+    player = Player(name=player_name, game=game, user=request.user)
+    player.save()
+
     if new_game:
+        print('creating new game')
         first_round = create_round(game)
         game.current_round = first_round
         game.save()
-
-    player = Player(name=player_name, game=game, user=request.user)
-    player.save()
 
     return HttpResponseRedirect(reverse('pages:index_game', kwargs={'secret_key': game.secret_key }))
 
 # game start page
 @login_required(login_url=LOGIN_URL)
 def index_game(request, secret_key):
-    try:
-        game = Game.objects.get(secret_key=secret_key)
-        current_round = Round.objects.get(id=game.current_round.id)
-        # find out which players are in this game.
-        players = Player.objects.filter(game=game)
-    except:
-        print('error in index_game')
+    game = Game.objects.get(secret_key=secret_key)
+    current_round = Round.objects.get(id=game.current_round.id)
+    # find out which players are in this game.
+    players = Player.objects.filter(game=game)
     return render(request, 'pages/index_game.html', 
                   {'secret_key':secret_key, 
                    'round_id': current_round.id,

@@ -1,6 +1,6 @@
 {% extends 'base.html' %} 
 {% block content %} 
-<a class="btn btn-secondary btn-sm mb-3" href="{% url 'pages:index_game' secret_key %}">Neu starten</a>
+<a class="btn btn-secondary btn-sm mb-3" href="{% url 'pages:index_game' secret_key %}">Übersicht</a>
 <h1 class="text-center mb-3"> Runde {{ round_id }}: {{ master }} </h1>
 {% for question in latest_question_list %}
   <div class="card mb-3">
