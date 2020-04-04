@@ -1,27 +1,40 @@
 from django.db import models
 from django.contrib.auth.models import User
 
-def create_round(game):
-    # choose next "master" player 
-    try:
+
+def find_next_player(all_players):
+    from itertools import cycle, islice, dropwhile
+    cycled = cycle(all_players)
+    skipped = dropwhile(lambda x: x.is_master, cycled)
+    sliced = islice(skipped, None, 1)
+    result = list(sliced)[0]
+    return result
+
+def create_round(game, number=1):
+    # find all players
+    all_players = Player.objects.filter(game=game)
+    master_players = [p for p in all_players if p.is_master]
+    if len(master_players) == 0:
+        print('assigning first master player.')
+        next_player = all_players[0]
+    elif len(master_players) == 1:
+        print('assigning next master player.')
         curr_player = Player.objects.get(game=game, is_master=True)
-    except Exception as e:
-        player = Player.objects.filter(game=game)[0]
-    else:
+        next_player = find_next_player(all_players)
         curr_player.is_master = False
         curr_player.save()
-        player = Player.get_next_by_timestamp(curr_player)
-        print('got next by number:', player)
-    player.is_master = True
-    player.save()
 
-    first_round = Round(game=game, player=player, number=1)
-    first_round.save()
-    questions = [Question(round=first_round, 
+    next_player.is_master = True
+    next_player.save()
+
+    # create next round with 3 questions.
+    next_round = Round(game=game, player=next_player, number=number)
+    next_round.save()
+    questions = [Question(round=next_round, 
                           question_number=i,
                           question_text=f"Frage {i}") for i in range(1, 4)]
     [q.save() for q in questions]
-    return first_round
+    return next_round
 
 
 class Game(models.Model):
@@ -48,11 +61,10 @@ class Round(models.Model):
     game = models.ForeignKey(Game, on_delete=models.CASCADE)
     player = models.ForeignKey(Player, on_delete=models.CASCADE, 
                                default=None)
-
     number = models.IntegerField(default=1)
 
     def __str__(self):
-        return f"round number {self.number}"
+        return f"Round {self.pk}"
 
 
 class Question(models.Model):
@@ -67,6 +79,8 @@ class Question(models.Model):
 
 
 class Choice(models.Model):
+    class Meta:
+        ordering = ['choice_text']
     question = models.ForeignKey(Question, on_delete=models.CASCADE)
     player = models.ForeignKey(Player, on_delete=models.CASCADE, 
                                default=None)
@@ -84,5 +98,3 @@ class Vote(models.Model):
     player = models.ForeignKey(Player, on_delete=models.CASCADE)
 
     choice = models.ForeignKey(Choice, on_delete=models.CASCADE, default=0, null=True, blank=True)
-
-

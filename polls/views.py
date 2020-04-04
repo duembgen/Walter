@@ -5,16 +5,58 @@ from django.urls import reverse
 
 from .models import Question, Choice, Round, Player, Game, Vote
 
+def update_choices(question):
+    choices = Choice.objects.filter(question=question)
+    for choice in choices: 
+        votes = Vote.objects.filter(choice=choice)
+        choice.votes = len(votes)
+        choice.save()
+
+def update_player_points(game):
+    #all_players = Player.objects.filter(game=game)
+    for player in game.player_set.all():
+        player.score = 0
+        player.save()
+
+    # count how many players voted for your choice.
+    current_round = game.current_round
+    for question in current_round.question_set.all():
+        for choice in question.choice_set.all():
+            choice.player.score += choice.votes 
+            choice.player.save()
+
+    # count if you voted for the corret choice.
+    for question in current_round.question_set.all():
+        master = Player.objects.get(game=game, is_master=True)
+
+        try:
+            correct_choice = Choice.objects.get(player=master, question=question)
+        except: 
+            print('master {master} did not enter a choice yet')
+            continue
+
+        for player in game.player_set.all():
+            try:
+                vote = Vote.objects.get(player=player, question=question)
+                if vote.choice == correct_choice:
+                    player.score += 1
+            except:
+                print(f'did not find a vote for player {player} on question {question}')
+
 def get_player(request_user, secret_key):
     game = Game.objects.get(secret_key=secret_key)
-    player = get_object_or_404(Player, user=request_user, 
-                               game=game)
+    player = get_object_or_404(Player, user=request_user, game=game)
     return player
-
 
 # Get questions and display them
 def index(request, **kwargs): #game,round_id
-    this_round = get_object_or_404(Round, pk=kwargs.get('round_id'))
+    game = get_object_or_404(Game, secret_key=kwargs.get('secret_key'))
+    update_player_points(game)
+
+    this_round = game.current_round 
+    round_id = kwargs.get('round_id')
+    if this_round.id != round_id:
+        print('Warning: round mismatch', round_id, this_round.id)
     master = this_round.player.name
     latest_question_list = Question.objects.filter(round=this_round)
     context = {'latest_question_list': latest_question_list, 
@@ -25,12 +67,12 @@ def index(request, **kwargs): #game,round_id
 # Show specific question and choices for voting
 def detail(request, **kwargs): #game,round,question_id
     player = get_player(request.user, kwargs.get('secret_key'))
-    question = get_object_or_404(Question, pk=kwargs['question_id'])
+    question = get_object_or_404(Question, id=kwargs['question_id'])
 
     try:
         current_vote = Vote.objects.get(player=player, question=question)
         current_choice = current_vote.choice
-        print('found vote', vote)
+        print('found vote', current_vote)
     except Vote.DoesNotExist:
         current_choice = -1
 
@@ -44,16 +86,21 @@ def detail(request, **kwargs): #game,round,question_id
 
 # Get question and display results
 def results(request, **kwargs): #game,round,question_id
-    question = get_object_or_404(Question, pk=kwargs['question_id'])
+    question = get_object_or_404(Question, id=kwargs.get('question_id'))
+    update_choices(question)
+
+    game = get_object_or_404(Game, secret_key=kwargs.get('secret_key'))
+    update_player_points(game)
+
     context = {'question':question, **kwargs}
     return render(request, 'polls/results.html', context)
 
 # Helper view to submit vote
-def vote(request, **kwargs): # game,round,question_id
-    question = get_object_or_404(Question, pk=kwargs.get('question_id'))
+def post_detail(request, **kwargs): # game,round,question_id
+    question = get_object_or_404(Question, id=kwargs.get('question_id'))
     player = get_player(request.user, kwargs.get('secret_key'))
     try:
-        selected_choice = question.choice_set.get(pk=request.POST['choice'])
+        selected_choice = question.choice_set.get(id=request.POST['choice'])
         # create a new vote, or change an existing one.
         try:
             vote = Vote.objects.get(question=question, player=player) 
@@ -83,9 +130,11 @@ def vote(request, **kwargs): # game,round,question_id
 
 # Form to enter answer
 def create(request, **kwargs): # game,round,question_id
-    question = get_object_or_404(Question, pk=kwargs.get('question_id'))
+    question = get_object_or_404(Question, id=kwargs.get('question_id'))
     game = get_object_or_404(Game, secret_key=kwargs.get('secret_key'))
     print('looking for', request.user, game)
+    print('filter by user', request.user, list(Player.objects.filter(user=request.user)))
+    print('filter by game', request.user, list(Player.objects.filter(game=game)))
     player = get_object_or_404(Player, user=request.user, game=game)
     try:
         current_answer = get_object_or_404(Choice, question=question, player=player)
@@ -101,10 +150,10 @@ def create(request, **kwargs): # game,round,question_id
     return render(request, 'polls/create.html', context=context)
 
 # Helper view to register submitted answer
-def submit(request, **kwargs): # game,round,question_id
+def post_create(request, **kwargs): # game,round,question_id
     print('submitted', kwargs)
     current_answer = request.POST['answer']
-    question = get_object_or_404(Question, pk=kwargs.get('question_id'))
+    question = get_object_or_404(Question, id=kwargs.get('question_id'))
 
     game_key = kwargs.get('secret_key')
     game = Game.objects.get(secret_key=kwargs.get('secret_key'))
@@ -136,3 +185,30 @@ def submit(request, **kwargs): # game,round,question_id
     url_kwargs = {key:kwargs.get(key) for key in ['secret_key', 'round_id']}
     print('url kwargs:', url_kwargs)
     return HttpResponseRedirect(reverse('polls:index', kwargs=url_kwargs))
+
+# Helper view to create next round
+def post_next_round(request, **kwargs): # game,round,question_id
+    from polls.models import create_round
+
+    game_key = kwargs.get('secret_key')
+    game = Game.objects.get(secret_key=kwargs.get('secret_key'))
+
+    # Create a new round if it does not exist yet.
+    current_round_id = kwargs.get('round_id')
+    current_round = Round.objects.get(id=current_round_id)
+    # If the new round was already created by another
+    # user, there is nothing to do.
+    if game.current_round  == current_round:
+        print('creating new round!')
+        number = game.current_round.number
+        next_round = create_round(game, number+1)
+        game.current_round = next_round
+        print('created new round:', next_round)
+        game.save()
+    else:
+        print('loading existing round...')
+
+    round_id = game.current_round.id
+    return HttpResponseRedirect(reverse(
+        'polls:index', 
+        kwargs={'secret_key': game.secret_key, 'round_id':round_id }))
