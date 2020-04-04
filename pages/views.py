@@ -1,4 +1,4 @@
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import render
 from django.urls import reverse
 from django.utils.crypto import get_random_string
@@ -32,9 +32,12 @@ def new_game(request, **kwargs):
 def quit_game(request, secret_key, **kwargs):
     # TODO: remove the player from the list
     # if it was this player's turn, assign someone else.
-    game = Game.objects.get(secret_key=secret_key)
-    player = Player.objects.get(user=request.user, game=game
-                                )
+    try:
+        game = Game.objects.get(secret_key=secret_key)
+        player = Player.objects.get(user=request.user, game=game)
+    except:
+        print('error in quit_game')
+        raise
     print(f"{DEBUG}: {player} left.")
     return render(request, 'pages/index.html')
 
@@ -46,11 +49,13 @@ def post_new_game(request):
 
     print(f'{DEBUG}: data in new_game:', secret_key, player_name)
 
+    new_game = False
     try:
         game = Game.objects.get(secret_key=secret_key)
         print(f'{DEBUG}: loaded game of key {secret_key}')
     except Game.DoesNotExist:
         game = Game(secret_key=secret_key)
+        new_game = True
         game.save()
 
     # make sure this user does not already have a player in the game.
@@ -69,24 +74,29 @@ def post_new_game(request):
         context['error_message'] = f"Du ({request.user.username}) bist schon im Spiel!"
         return render(request, 'pages/new_game.html', context=context)
 
+    if new_game:
+        first_round = create_round(game)
+        game.current_round = first_round
+        game.save()
+
     player = Player(name=player_name, game=game, user=request.user)
     player.save()
 
-    first_round = create_round(game)
-    game.current_round = first_round
-    game.save()
     return HttpResponseRedirect(reverse('pages:index_game', kwargs={'secret_key': game.secret_key }))
 
 # game start page
 @login_required(login_url=LOGIN_URL)
 def index_game(request, secret_key):
-    game = Game.objects.get(secret_key=secret_key)
-    current_round = Round.objects.get(pk=game.current_round.pk)
-    # find out which players are in this game.
-    players = Player.objects.filter(game=game)
+    try:
+        game = Game.objects.get(secret_key=secret_key)
+        current_round = Round.objects.get(id=game.current_round.id)
+        # find out which players are in this game.
+        players = Player.objects.filter(game=game)
+    except:
+        print('error in index_game')
     return render(request, 'pages/index_game.html', 
                   {'secret_key':secret_key, 
-                   'round_id': current_round.pk,
+                   'round_id': current_round.id,
                    'players':players})
 
 @login_required

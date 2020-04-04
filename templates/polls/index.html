@@ -1,15 +1,16 @@
 {% extends 'base.html' %} 
 {% block content %} 
-<a class="btn btn-secondary btn-sm mb-3" href="{% url 'pages:index_game' secret_key %}">Restart Game</a>
+<a class="btn btn-secondary btn-sm mb-3" href="{% url 'pages:index_game' secret_key %}">Neu starten</a>
 <h1 class="text-center mb-3"> Runde {{ round_id }}: {{ master }} </h1>
 {% for question in latest_question_list %}
   <div class="card mb-3">
     <div class="card-body">
-      <p class="lead">{{ question.question_text }}</p>
+      <p class="lead">{{ question.question_text }} (id: {{question.id}}) </p>
       <a href="{% url 'polls:create' secret_key round_id question.id %}" class="btn btn-primary btn-sm">Antworten</a>
       <a href="{% url 'polls:detail' secret_key round_id question.id %}" class="btn btn-primary btn-sm">Abstimmen</a>
       <a href="{% url 'polls:results' secret_key round_id question.id %}" class="btn btn-secondary btn-sm">Resultate</a>
     </div>
   </div>
 {% endfor %}
+<a class="btn btn-secondary btn-sm mb-3" href="{% url 'polls:post_next_round' secret_key round_id %}">Nächste Runde</a>
 {% endblock %}

@@ -9,7 +9,7 @@
 </p>
 {% endif %}
 
-<form action="{% url 'polls:submit' secret_key round_id question.id %}" method="post">
+<form action="{% url 'polls:post_create' secret_key round_id question.id %}" method="post">
 	{% csrf_token %} 
 	<label for="answer">
     Deine Antwort:  
