@@ -125,3 +125,5 @@ dmypy.json
 
 *.swp
 *.swo
+
+secret_key.txt
