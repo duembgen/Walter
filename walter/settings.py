@@ -25,7 +25,7 @@ SECRET_KEY = '1^_&3^e5&d&^1r)7q21ku7kif0czi07fiw_1^&ref^k!y#_h-d'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['waltere.pythonanywhere.com']
 
 
 # Application definition
@@ -122,3 +122,7 @@ STATIC_URL = '/static/'
 
 LOGIN_URL = '/login'
 LOGIN_REDIRECT_URL = '/login'
+
+MEDIA_URL = '/media/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
