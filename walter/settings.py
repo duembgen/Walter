@@ -146,4 +146,8 @@ if HOSTNAME == 'waltere.pythonanywhere.com':
     MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 elif HOSTNAME == 'waltere.herokuapp.com':
     import django_heroku
+
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SECURE_SSL_REDIRECT = True
+
     django_heroku.settings(locals())
