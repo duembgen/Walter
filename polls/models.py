@@ -7,10 +7,12 @@ def find_next_player(all_players):
     cycled = cycle(all_players)
     skipped = dropwhile(lambda x: x.is_master, cycled)
     sliced = islice(skipped, None, 1)
+    print('order of players', list(sliced))
     result = list(sliced)[0]
     return result
 
 def create_round(game, number=1):
+    #master = game.current_round.player
     # find all players
     all_players = Player.objects.filter(game=game)
     master_players = [p for p in all_players if p.is_master]
@@ -45,6 +47,8 @@ class Game(models.Model):
 
 
 class Player(models.Model):
+    class Meta:
+        ordering = ['name']
     game = models.ForeignKey(Game, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE, default=None)
 

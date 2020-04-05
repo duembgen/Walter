@@ -147,6 +147,7 @@ if HOSTNAME == 'waltere.pythonanywhere.com':
 elif HOSTNAME == 'waltere.herokuapp.com':
     import django_heroku
 
+    # this only works with a paid plan on heroku :( 
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
     SECURE_SSL_REDIRECT = True
 

@@ -90,10 +90,15 @@ def index_game(request, secret_key):
     current_round = Round.objects.get(id=game.current_round.id)
     # find out which players are in this game.
     players = Player.objects.filter(game=game)
+    all_round_ids = [r.id for r in Round.objects.filter(game=game)]
+    context = {
+        'secret_key':secret_key, 
+        'all_round_ids': all_round_ids, 
+        'round_id': current_round.id,
+        'players':players
+    }
     return render(request, 'pages/index_game.html', 
-                  {'secret_key':secret_key, 
-                   'round_id': current_round.id,
-                   'players':players})
+                  context=context)
 
 @login_required
 def user_logout(request):

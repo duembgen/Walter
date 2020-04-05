@@ -19,11 +19,12 @@ def update_player_points(game):
         player.save()
 
     # count how many players voted for your choice.
-    current_round = game.current_round
-    for question in current_round.question_set.all():
-        for choice in question.choice_set.all():
-            choice.player.score += choice.votes 
-            choice.player.save()
+    for current_round in game.round_set.all():
+        master = current_round.player
+        for question in current_round.question_set.all():
+            for choice in question.choice_set.all():
+                choice.player.score += choice.votes 
+                choice.player.save()
 
     # count if you voted for the corret choice.
     for question in current_round.question_set.all():
@@ -196,19 +197,23 @@ def post_next_round(request, **kwargs): # game,round,question_id
     # Create a new round if it does not exist yet.
     current_round_id = kwargs.get('round_id')
     current_round = Round.objects.get(id=current_round_id)
-    # If the new round was already created by another
-    # user, there is nothing to do.
+
+    # increasing the round by 1, and create it if it 
+    # does not exist yet.
     if game.current_round  == current_round:
         print('creating new round!')
         number = game.current_round.number
         next_round = create_round(game, number+1)
+        new_id = next_round.id
         game.current_round = next_round
         print('created new round:', next_round)
         game.save()
+    # If the new round was already created by another
+    # user, there is nothing to do.
     else:
         print('loading existing round...')
+        new_id = game.current_round.id
 
-    round_id = game.current_round.id
     return HttpResponseRedirect(reverse(
         'polls:index', 
-        kwargs={'secret_key': game.secret_key, 'round_id':round_id }))
+        kwargs={'secret_key': game.secret_key, 'round_id':new_id }))

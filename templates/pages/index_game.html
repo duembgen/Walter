@@ -3,6 +3,10 @@
 <a class="btn btn-secondary btn-sm mb-3" href="{% url 'pages:quit_game' secret_key %}">Spiel verlassen</a>
 <h1 class="text-center mb-3"> Spielübersicht  </h1>
 <p class="text-center mb-3"> Geheimcode: {{ secret_key }} </p>
+<p class="text-center mb-3"> {% for this_round_id in all_round_ids %}
+<a {% if this_round_id == round_id %}class="text-success"{% endif %} href="{% url 'polls:index' secret_key this_round_id %}">Runde {{this_round_id}}</a> / 
+{% endfor %}
+</p>
 
 {% if error_message %}
 <p class="alert alert-danger">
